@@ -1,0 +1,24 @@
+
+VMPREFIX = k8stest
+
+vm/build: vm/build/master vm/build/workers
+
+vm/build/master: 
+	multipass launch 22.04 --name $(VMPREFIX)master --cpus $$CPUS --disk $$DISK --memory $$MEMORY --mount "$$DATA_DIR":~/data
+	multipass transfer -v --parents --recursive ./scripts $(VMPREFIX)master:scripts
+	multipass exec $(VMPREFIX)master -- sh -c "sh scripts/master_setup.sh"
+
+vm/build/workers:
+	for i in $$(seq 1 $$NUM_WORKERS); do \
+		multipass launch 22.04 --name $(VMPREFIX)worker$$i --cpus $$CPUS --disk $$DISK --memory $$MEMORY --mount "$$DATA_DIR":~/data ; \
+		multipass exec $(VMPREFIX)worker$$i -- sh -c "echo \"worker$$i\" > ~/name.txt" ; \
+		multipass transfer -v --parents --recursive ./scripts $(VMPREFIX)worker$$i:scripts ; \
+		multipass exec $(VMPREFIX)worker$$i -- sh -c "sh scripts/worker_setup.sh" ; \
+		multipass exec $(VMPREFIX)worker$$i -- sh -c "multipass exec $(VMPREFIX)master -- sh -c \"sudo kubeadm token create --print-join-command\"" ; \
+	done
+
+vm/delete:
+	for vm in $$(multipass list | grep "$(VMPREFIX)" | cut -d " " -f 1) ; do \
+		multipass delete $$vm ; \
+	done
+	multipass purge
