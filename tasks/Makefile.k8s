@@ -1,0 +1,43 @@
+
+VMPREFIX := k8s
+VMMASTER := $(VMPREFIX)-master
+VMWORKER := $(VMPREFIX)-worker
+
+k8s/build: k8s/build/master k8s/build/workers k8s/apply/network
+
+k8s/build/master: k8s/init/master k8s/write/join
+	
+k8s/init/master: 
+	multipass launch 22.04 --name $(VMMASTER) --cpus $$CPUS --disk $$DISK --memory $$MEMORY --mount "$$DATA_DIR":~/data
+	multipass transfer -v --parents --recursive ./scripts $(VMMASTER):scripts
+	multipass exec $(VMMASTER) -- scripts/master_setup.sh
+
+k8s/write/join:
+	echo -n "sudo " > scripts/worker_join.sh
+	multipass exec $(VMMASTER) -- kubeadm token create --print-join-command | xargs echo -n >> scripts/worker_join.sh
+	echo -n " --cri-socket unix:///var/run/cri-dockerd.sock" >> scripts/worker_join.sh
+
+k8s/build/workers:
+	for i in $$(seq 1 $$NUM_WORKERS); do \
+		multipass launch 22.04 --name $(VMWORKER)$$i --cpus $$CPUS --disk $$DISK --memory $$MEMORY --mount "$$DATA_DIR":~/data ; \
+		multipass transfer -v --parents --recursive ./scripts $(VMWORKER)$$i:scripts ; \
+		multipass exec $(VMWORKER)$$i -- scripts/worker_setup.sh ; \
+	done
+
+k8s/apply/network:
+	multipass exec $(VMMASTER) -- kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
+
+k8s/shell/master:
+	multipass shell $(VMMASTER)
+
+k8s/delete: k8s/delete/master k8s/delete/workers
+
+k8s/delete/master:
+	multipass delete $(VMMASTER)
+	multipass purge
+
+k8s/delete/workers:
+	for vm in $$(multipass list | grep "$(VMWORKER)" | cut -d " " -f 1) ; do \
+		multipass delete $$vm ; \
+	done
+	multipass purge
