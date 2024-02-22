@@ -1,0 +1,34 @@
+
+FLASK_NAME := k8s-flask
+
+# Build Docker image
+flask/build:
+	docker build -t $(FLASK_NAME) apps/flask
+
+# Build Docker image without using cache
+flask/build/no_cache:
+	docker build --no-cache -t $(FLASK_NAME) apps/flask
+
+# Start the Docker container
+flask/start:
+	docker run -d -p 5001:5000 --name $(FLASK_NAME) $(FLASK_NAME):latest
+
+# Attach to Docker container
+flask/attach:
+	docker exec -it $(FLASK_NAME) /bin/bash
+
+# Attach to Docker container as root user
+flask/attach/root:
+	docker exec -u root -it $(FLASK_NAME) /bin/bash
+
+# Stop Docker container
+flask/stop:
+	docker stop $(FLASK_NAME)
+
+# Remove Docker container
+flask/remove: flask/stop
+	docker rm $(FLASK_NAME)
+
+# Save container changes to image
+flask/commit:
+	docker commit $(FLASK_NAME)

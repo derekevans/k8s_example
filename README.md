@@ -1,5 +1,4 @@
 install multipass
-Open port on server to multipass
 install make
 
 make k8s/build/master CPUS=2 MEMORY=2G DISK=10G DATA_DIR="/home/lab/Development/k8s_example/data"
