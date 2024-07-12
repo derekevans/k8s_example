@@ -2,15 +2,17 @@
 VMPREFIX := k8s
 VMMASTER := $(VMPREFIX)-master
 VMWORKER := $(VMPREFIX)-worker
+HOST_IP := $$(hostname -I | cut -d " " -f 1)
 
 k8s/build: k8s/build/master k8s/build/workers k8s/apply/network
 
 k8s/build/master: k8s/init/master k8s/write/join
 	
 k8s/init/master: 
-	multipass launch 22.04 --name $(VMMASTER) --cpus $$CPUS --disk $$DISK --memory $$MEMORY --mount "$$DATA_DIR":~/data
+	multipass launch 22.04 --name $(VMMASTER) --cpus $$CPUS --disk $$DISK --memory $$MEMORY --mount "$$MOUNT_DIR":~/mount
 	multipass transfer -v --parents --recursive ./scripts $(VMMASTER):scripts
-	multipass exec $(VMMASTER) -- scripts/master_setup.sh
+	multipass exec $(VMMASTER) -- sh -c "echo \"export HOST_IP=$(HOST_IP)\" >> ~/.bashrc"
+	multipass exec $(VMMASTER) -- scripts/master_setup.sh $(HOST_IP)
 
 k8s/write/join:
 	echo -n "sudo " > scripts/worker_join.sh
@@ -19,7 +21,7 @@ k8s/write/join:
 
 k8s/build/workers:
 	for i in $$(seq 1 $$NUM_WORKERS); do \
-		multipass launch 22.04 --name $(VMWORKER)$$i --cpus $$CPUS --disk $$DISK --memory $$MEMORY --mount "$$DATA_DIR":~/data ; \
+		multipass launch 22.04 --name $(VMWORKER)$$i --cpus $$CPUS --disk $$DISK --memory $$MEMORY --mount "$$MOUNT_DIR":~/mount ; \
 		multipass transfer -v --parents --recursive ./scripts $(VMWORKER)$$i:scripts ; \
 		multipass exec $(VMWORKER)$$i -- scripts/worker_setup.sh ; \
 	done
