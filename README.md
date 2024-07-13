@@ -46,8 +46,7 @@ docker run -d -p 5000:5000 --name registry registry:2.7
 Build the Flask app image and push it to the Docker Registry:
 
 ```sh
-make flask/build/no_cache
-make flask/push
+make flask
 ```
 
 ### Kubernetes Cluster
