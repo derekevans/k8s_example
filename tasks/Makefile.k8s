@@ -9,7 +9,7 @@ k8s/build: k8s/build/master k8s/build/workers k8s/apply/network k8s/apply/yaml
 k8s/build/master: k8s/init/master k8s/write/join
 	
 k8s/init/master: 
-	multipass launch 22.04 --name $(VMMASTER) --cpus $$CPUS --disk $$DISK --memory $$MEMORY --mount "$$MOUNT_DIR":~/mount
+	multipass launch 22.04 --name $(VMMASTER) --cpus $$CPUS --disk $$DISK --memory $$MEMORY
 	multipass transfer -v --parents --recursive ./scripts $(VMMASTER):scripts
 	multipass transfer -v --parents ./apps/flask/app.yaml $(VMMASTER):app.yaml
 	multipass exec $(VMMASTER) -- sh -c "echo \"export HOST_IP=$(HOST_IP)\" >> ~/.bashrc"
@@ -22,8 +22,8 @@ k8s/write/join:
 
 k8s/build/workers:
 	for i in $$(seq 1 $$NUM_WORKERS); do \
-		multipass launch 22.04 --name $(VMWORKER)$$i --cpus $$CPUS --disk $$DISK --memory $$MEMORY --mount "$$MOUNT_DIR":~/mount ; \
-		multipass transfer -v --parents --recursive ./scripts $(VMWORKER)$$i:scripts ; \
+		multipass launch 22.04 --name $(VMWORKER)$$i --cpus $$CPUS --disk $$DISK --memory $$MEMORY; \
+		multipass transfer -v --parents --recursive ./scripts $(VMWORKER)$$i:scripts; \
 		multipass exec $(VMWORKER)$$i -- scripts/worker_setup.sh $(HOST_IP); \
 	done
 
@@ -32,9 +32,6 @@ k8s/apply/network:
 
 k8s/apply/yaml:
 	multipass exec $(VMMASTER) -- kubectl apply -f app.yaml
-
-k8s/shell/master:
-	multipass shell $(VMMASTER)
 
 k8s/delete: k8s/delete/master k8s/delete/workers
 
