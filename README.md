@@ -48,11 +48,11 @@ docker run -d -p 5000:5000 --name registry registry:2.7
 With images built on the host, tag them and push them to the registry:
 
 ```sh
-docker tag k8s-flask localhost:5000/k8s-flask
-docker push localhost:5000/k8s-flask
+docker tag k8s-flask:latest localhost:5000/k8s-flask:latest
+docker push localhost:5000/k8s-flask:latest
 ```
 
-From the master node, you can then pull the image:
+From the master/worker nodes, you can then pull the image:
 
 ```sh
 sudo docker pull HOST_IP:5000/k8s-flask
@@ -61,7 +61,5 @@ sudo docker pull HOST_IP:5000/k8s-flask
 Here, HOST_IP can be determined by running the following on the host machine:
 
 ```sh
-hostname -I
+hostname -I | awk '{print $1}'
 ```
-
-The first IP will be the IP to input for HOST_IP.

@@ -1,3 +1,8 @@
+#!/bin/bash
+# Args
+# $1 - Host IP
+
+echo "Host IP: $1"
 
 # Turn off swap memory
 # See https://discuss.kubernetes.io/t/swap-off-why-is-it-necessary/6879
@@ -46,3 +51,11 @@ sudo systemctl enable cri-docker.service
 sudo systemctl enable --now cri-docker.socket
 cd ~
 rm -r ~/software
+
+# Docker Registry
+sudo touch /etc/default/docker
+echo "DOCKER_OPTS=\"--config-file=/etc/docker/daemon.json\"" | sudo tee -a /etc/default/docker
+sudo touch /etc/docker/daemon.json
+echo "{ \"insecure-registries\":[\"$1:5000\"] }" | sudo tee -a /etc/docker/daemon.json
+sudo systemctl stop docker
+sudo systemctl start docker

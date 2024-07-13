@@ -32,3 +32,8 @@ flask/remove: flask/stop
 # Save container changes to image
 flask/commit:
 	docker commit $(FLASK_NAME)
+
+# Ping API
+flask/ping:
+	seq 1 10000 | xargs -n 1 -P $$N_THREADS scripts/ping.sh
+
