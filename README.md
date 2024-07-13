@@ -75,7 +75,7 @@ To test the Kubernetes cluster:
 make flask/ping N_THREADS=8
 ```
 
-This command sends a GET HTTP request to the Flask app `/hello` endpoint.  This endpoint returns a string indicating the IP of the node that is responding to the request.
+This command sends multiple GET HTTP request in parallel to the Flask app `/hello` endpoint.  This endpoint returns a string indicating the IP of the node that is responding to the request.
 
 ```console
 Greetings from 10.244.2.3!
