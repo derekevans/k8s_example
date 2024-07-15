@@ -1,6 +1,6 @@
 
 # k8s_example
-This repo simulates deploying a Kubernetes cluster running a Flask app on a Linux machine. Cluster nodes will be virtual machines generated via the mutlipass tool.
+This repo demonstrates deploying a Kubernetes cluster running a Flask app on Linux virtual machines.
 
 ## Dependencies
 
